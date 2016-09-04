@@ -93,18 +93,20 @@ evalE g (Var x) = case (E.lookup g x) of
   _        -> error "runtime error: undefined variable"
 
 -- evaluates list constructors and primops
--- TODO
 evalE g (Con "Nil") = Nil
 evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
 evalE g (App (Prim Null) (e)) = case (evalE g e) of
   Nil -> B True
   _   -> B False
---evalE g (App (Prim Tail) (e)) = case (evalE g e) of
---  Nil -> error "runtime error: empty list has no tail"
---  e'       -> e'
---evalE g (App (Prim Head) (e)) = case (evalE g e) of
---  Nil -> error "runtime error: empty list has no head"
---  e'       -> e'
+evalE g (App (Prim Head) (e)) = case (evalE g e) of
+  Nil         -> error "runtime error: empty list has no head"
+  (Cons x xs) -> I x
+evalE g (App (Prim Tail) (e)) = case (evalE g e) of
+  Nil         -> error "runtime error: empty list has no tail"
+  (Cons x xs) -> (Cons x xs)
+--  (Cons x xs) -> let (Cons x' xs') = evalE g (App (Con "Cons") xs)
+--                 in Cons x' xs'
+-- TODO: tail not working fully
 
 -- evaluates let bindings
 evalE g (Let [Bind x (TypeCon y) [] e1] e2) =
@@ -118,6 +120,9 @@ evalE g (Let [Bind x (TypeCon y) [] e1] e2) =
 
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
+
+--convert :: Value -> Expr
+--convert (Cons x) = (App (App (Cons x xs)))
 
 -- evaluates comparison operators
 evalCmp :: Integer -> Integer -> Op -> Bool
