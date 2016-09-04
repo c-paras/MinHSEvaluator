@@ -97,7 +97,7 @@ evalE g (Var x) = case (E.lookup g x) of
 -- evalE g (Con Nill) = []
 
 -- evaluates let bindings
-evalE g (Let [Bind x (TypeCon Int) [] e1] e2) =
+evalE g (Let [Bind x (TypeCon y) [] e1] e2) =
   let
     e1' = evalE g e1        -- evaluates the binding expression
     g' = (E.add g (x, e1')) -- updates environment with new binding
