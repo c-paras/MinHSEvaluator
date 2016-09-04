@@ -109,7 +109,7 @@ evalE g (App (Prim Tail) (e)) = case (evalE g e) of
 -- TODO: tail not working fully
 
 -- evaluates let bindings
-evalE g (Let [Bind x (TypeCon y) [] e1] e2) =
+evalE g (Let [Bind x (y) [] e1] e2) =
   let
     e1' = evalE g e1         -- evaluates the binding expression
     g'  = (E.add g (x, e1')) -- updates environment with new binding
@@ -123,6 +123,7 @@ evalE _ e = error (show e)
 
 --convert :: Value -> Expr
 --convert (Cons x) = (App (App (Cons x xs)))
+-- TODO: implement an unevaluator for tail
 
 -- evaluates comparison operators
 evalCmp :: Integer -> Integer -> Op -> Bool
