@@ -94,14 +94,24 @@ evalE g (Var x) = case (E.lookup g x) of
 
 -- evaluates list constructors and primops
 -- TODO
--- evalE g (Con Nill) = []
+evalE g (Con "Nil") = Nil
+evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
+evalE g (App (Prim Null) (e)) = case (evalE g e) of
+  Nil -> B True
+  _   -> B False
+--evalE g (App (Prim Tail) (e)) = case (evalE g e) of
+--  Nil -> error "runtime error: empty list has no tail"
+--  e'       -> e'
+--evalE g (App (Prim Head) (e)) = case (evalE g e) of
+--  Nil -> error "runtime error: empty list has no head"
+--  e'       -> e'
 
 -- evaluates let bindings
 evalE g (Let [Bind x (TypeCon y) [] e1] e2) =
   let
-    e1' = evalE g e1        -- evaluates the binding expression
-    g' = (E.add g (x, e1')) -- updates environment with new binding
-  in evalE g' e2            -- evaluates the body of the binding
+    e1' = evalE g e1         -- evaluates the binding expression
+    g'  = (E.add g (x, e1')) -- updates environment with new binding
+  in evalE g' e2             -- evaluates the body of the binding
 
 -- evaluates functions
 -- TODO
