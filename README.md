@@ -9,7 +9,7 @@ This evaluator has been tested on Ubuntu 64-bit 16.04 LTS using GHC version 7.10
 reset && cabal build && ./run_tests.sh
 ```
 
-* Test a standalone program in ghci:
+* Test a standalone program in `ghci`:
 
 ```haskell
 let program = "main :: Int = 1 + 2;"
