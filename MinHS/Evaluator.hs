@@ -1,6 +1,6 @@
 {-
 Contributors: Liam O'Connor-Davis and Constantinos Paraskevopoulos
-Last updated: September 2016
+Last Updated: September 2016
 Description: Implements an evaluator for the Haskell subset MinHS.
 -}
 
@@ -19,7 +19,7 @@ data Value
   | B Bool
   | Nil
   | Cons Integer Value
-  | Param String
+  | Param String -- TODO: value for function handling
   deriving (Show)
 
 instance PP.Pretty Value where
@@ -91,23 +91,25 @@ evalE g (If e1 e2 e3) = case (evalE g e1) of
 -- evaluates variables
 evalE g (Var x) = case (E.lookup g x) of
   (Just v) -> v
-  _        -> error (show x) --"runtime error: undefined variable"
+  _        -> error (show x) --TODO: "runtime error: undefined variable"
 
--- evaluates list constructors and primops
+-- evaluates list constructors
 evalE g (Con "Nil") = Nil
 evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
+
+-- evaluates empty list inspector
 evalE g (App (Prim Null) (e)) = case (evalE g e) of
   Nil -> B True
   _   -> B False
+
+-- evaluates head
 evalE g (App (Prim Head) (e)) = case (evalE g e) of
   Nil         -> error "runtime error: empty list has no head"
   (Cons x xs) -> I x
-evalE g (App (Prim Tail) (e)) = case (evalE g e) of
-  Nil         -> error "runtime error: empty list has no tail"
-  (Cons x xs) -> (Cons x xs)
---  (Cons x xs) -> let (Cons x' xs') = evalE g (App (Con "Cons") xs)
---                 in Cons x' xs'
--- TODO: tail not working fully
+
+-- evaluates tail
+evalE g (App (Prim Tail) (App (App (Con "Cons") (Num x)) xs)) = evalE g xs 
+evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: empty list has no tail"
 
 -- evaluates let bindings
 evalE g (Let [Bind x (y) [] e1] e2) =
