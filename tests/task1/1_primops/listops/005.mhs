@@ -1,0 +1,1 @@
+main :: Int = head (Cons 2 Nil);

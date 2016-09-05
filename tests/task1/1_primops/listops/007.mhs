@@ -1,0 +1,1 @@
+main :: Bool = null (Cons 1 (Cons 2 Nil));
