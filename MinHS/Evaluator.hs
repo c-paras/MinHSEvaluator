@@ -104,47 +104,28 @@ evalE g (App (Prim Null) (e)) = case (evalE g e) of
 
 -- evaluates head
 evalE g (App (Prim Head) (e)) = case (evalE g e) of
-  Nil         -> error "runtime error: empty list has no head"
   (Cons x xs) -> I x
+  Nil         -> error "runtime error: list is empty"
 
 -- evaluates tail
 evalE g (App (Prim Tail) (App (App (Con "Cons") (Num x)) xs)) = evalE g xs
-evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: empty list has no tail"
+evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
+
+--main :: Int = let sum :: [Int] -> Int = letfun sum :: [Int] -> Int x = if null x then 0 else head x + sum (tail x); in sum (Cons 3 (Cons 2 (Cons 1 Nil)));
+
+--main :: [Int] = let ones :: [Int] = letfun ones :: [Int] = Cons 1 ones; in Cons (head ones) (Cons (head (tail ones)) Nil);
+
+--evalE _ (Prim Tail) = Nil --error "tail" -- Nil
+--evalE _ (Con "Cons") = Nil -- error "cons" -- Nil
+--evalE _ (App (Prim Head) _) = Nil
+--evalE _ (App (Prim Tail) _) = Nil
 
 -- evaluates let bindings
-evalE g (Let [Bind x (y) [] e1] e2) =
+evalE g (Let [Bind x (_) [] e1] e2) =
   let
     e1' = evalE g e1         -- evaluates the binding expression
     g'  = (E.add g (x, e1')) -- updates environment with new binding
   in evalE g' e2             -- evaluates the body of the binding
-
-{-
-evalE g (App (Var f) e2) = case (E.lookup g f) of
-  (Just v) -> let
-                e2' = evalE g e2
-                param = case (E.lookup g f) of
-                  (Just v1') -> v1'
-                  _          -> error "runtime error: undefined variable"
-                g' = (E.add g ((show param), e2'))
-              in evalE g' (Var f)
-  _        -> error "runtime error: undefined function"
--}
-
--- http://www.cs.cornell.edu/courses/cs3110/2014fa/lectures/8/lec08.pdf
-
-{-
--- evaluates function applications
-evalE g (App e1 e2) =
-  let
-    v1 = evalE g' e1
-    v2 = evalE g e2
-    g' = (E.add g ("x", v2))
--- looks up e1 to get the parameter name (i.e. "x")
---    param = case (E.lookup g (show e1)) of
---      (Just v1') -> v1'
---      _          -> error "runtime error: undefined variable"
-  in v1
--}
 
 -- evaluates function applications
 evalE g (App e1 e2) =
