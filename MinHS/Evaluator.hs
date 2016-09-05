@@ -91,7 +91,7 @@ evalE g (If e1 e2 e3) = case (evalE g e1) of
 -- evaluates variables
 evalE g (Var x) = case (E.lookup g x) of
   (Just v) -> v
-  _        -> error "runtime error: undefined variable"
+  _        -> error (show x) --"runtime error: undefined variable"
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
@@ -120,13 +120,18 @@ evalE g (Let [Bind x (y) [] e1] e2) =
 
 -----------------------------------------------------------
 -- TODO: special case
---evalE g (App (Var f) e2) = case (E.lookup g f) of
---  (Just v) -> v --let
-                --e2' = evalE g e2
-                --g' = (E.add g (v, e2'))
-              --in evalE g' v
---  _        -> error "runtime error: undefined function"
+evalE g (App (Var f) e2) = case (E.lookup g f) of
+  (Just v) -> let
+                e2' = evalE g e2
+                param = case (E.lookup g f) of
+                  (Just v1') -> v1'
+                  _          -> error "runtime error: undefined variable"
+                g' = (E.add g ((show param), e2'))
+              in evalE g' (Var f)
+  _        -> error "runtime error: undefined function"
 -----------------------------------------------------------
+
+-- focusing on: tests/5_let/1_functions/00[67].mhs
 
 -- evaluates function applications
 evalE g (App e1 e2) =
@@ -137,7 +142,7 @@ evalE g (App e1 e2) =
 -- looks up e1 to get the parameter name (i.e. "x")
 --    param = case (E.lookup g (show e1)) of
 --      (Just v1') -> v1'
---      _          -> error runtime error: undefined variable"
+--      _          -> error "runtime error: undefined variable"
   in v1
 
 -- evaluates function values
