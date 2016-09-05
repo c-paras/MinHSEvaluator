@@ -20,6 +20,7 @@ data Value
   | Nil                -- empty list constructor
   | Cons Integer Value -- list constructor
   | Param String       -- TODO: param name for function handling
+  | FunctionClosure VEnv String String Exp
   deriving (Show)
 
 instance PP.Pretty Value where
@@ -91,7 +92,7 @@ evalE g (If e1 e2 e3) = case (evalE g e1) of
 -- evaluates variables
 evalE g (Var x) = case (E.lookup g x) of
   (Just v) -> v
-  _        -> error (show x) --"runtime error: undefined variable"
+  _        -> error "runtime error: undefined variable"
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
@@ -117,7 +118,7 @@ evalE g (Let [Bind x (y) [] e1] e2) =
     e1' = evalE g e1         -- evaluates the binding expression
     g'  = (E.add g (x, e1')) -- updates environment with new binding
   in evalE g' e2             -- evaluates the body of the binding
-
+{-
 -----------------------------------------------------------
 -- TODO: special case
 evalE g (App (Var f) e2) = case (E.lookup g f) of
@@ -130,9 +131,10 @@ evalE g (App (Var f) e2) = case (E.lookup g f) of
               in evalE g' (Var f)
   _        -> error "runtime error: undefined function"
 -----------------------------------------------------------
-
+-}
 -- focusing on: tests/5_let/1_functions/00[67].mhs
-
+-- http://www.cs.cornell.edu/courses/cs3110/2014fa/lectures/8/lec08.pdf
+{-
 -- evaluates function applications
 evalE g (App e1 e2) =
   let
@@ -144,13 +146,23 @@ evalE g (App e1 e2) =
 --      (Just v1') -> v1'
 --      _          -> error "runtime error: undefined variable"
   in v1
+-}
+-- TODO: new version of function application
+evalE g (App e1 e2) =
+  let
+    v1@(FunctionClosure g' f x body) = evalE g e1
+    v2   = evalE g e2
+    g''  = (E.add g' (f, v1))
+    g''' = (E.add g'' (x, v2))
+  in evalE g''' body
 
 -- evaluates function values
 -- TODO: types are ignored for now
 evalE g (Letfun (Bind f (Arrow (TypeCon t1) (TypeCon t2)) [param] body)) =
-  let
-    g' = (E.add g (f, Param param)) -- adds named param to environment
-  in evalE g' body
+--  let
+--    g' = (E.add g (f, Param param)) -- adds named param to environment
+--  in evalE g' body
+  FunctionClosure g f param body
 
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
