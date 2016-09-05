@@ -108,7 +108,7 @@ evalE g (App (Prim Head) (e)) = case (evalE g e) of
   (Cons x xs) -> I x
 
 -- evaluates tail
-evalE g (App (Prim Tail) (App (App (Con "Cons") (Num x)) xs)) = evalE g xs 
+evalE g (App (Prim Tail) (App (App (Con "Cons") (Num x)) xs)) = evalE g xs
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: empty list has no tail"
 
 -- evaluates let bindings
@@ -129,7 +129,7 @@ evalE g (App e1 e2) =
 -- but also need to store f = param when handling letfun!
 --    param = case (E.lookup g v1) of
 --      (Just v1') -> v1'
---      _          -> error "runtime error: undefined variable"    
+--      _          -> error "runtime error: undefined variable"
 ---------
   in v1
 
@@ -150,10 +150,6 @@ evalE g (Letfun (Bind f (Arrow (TypeCon t1) (TypeCon t2)) [param] body)) =
 
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
-
---convert :: Value -> Expr
---convert (Cons x) = (App (App (Cons x xs)))
--- TODO: implement an unevaluator for tail
 
 -- evaluates comparison operators
 evalCmp :: Integer -> Integer -> Op -> Bool
