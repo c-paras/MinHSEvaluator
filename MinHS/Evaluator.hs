@@ -15,11 +15,11 @@ type VEnv = E.Env Value
 
 -- defines the values a program can be evaluated to
 data Value
-  = I Integer
-  | B Bool
-  | Nil
-  | Cons Integer Value
-  | Param String -- TODO: value for function handling
+  = I Integer          -- integer value
+  | B Bool             -- boolean value
+  | Nil                -- empty list constructor
+  | Cons Integer Value -- list constructor
+  | Param String       -- TODO: param name for function handling
   deriving (Show)
 
 instance PP.Pretty Value where
@@ -91,7 +91,7 @@ evalE g (If e1 e2 e3) = case (evalE g e1) of
 -- evaluates variables
 evalE g (Var x) = case (E.lookup g x) of
   (Just v) -> v
-  _        -> error (show x) --TODO: "runtime error: undefined variable"
+  _        -> error "runtime error: undefined variable"
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
@@ -118,35 +118,34 @@ evalE g (Let [Bind x (y) [] e1] e2) =
     g'  = (E.add g (x, e1')) -- updates environment with new binding
   in evalE g' e2             -- evaluates the body of the binding
 
--- evaluates function applications
-evalE g (App e1 e2) =
-  let
-    v1 = evalE g' e1
-    v2 = evalE g e2
-    g' = (E.add g ("x", v2))
----------
--- and do a case (E.lookup g v1) of ... to give the actual value of "x" above
--- but also need to store f = param when handling letfun!
---    param = case (E.lookup g v1) of
---      (Just v1') -> v1'
---      _          -> error "runtime error: undefined variable"
----------
-  in v1
-
+-----------------------------------------------------------
+-- TODO: special case
 --evalE g (App (Var f) e2) = case (E.lookup g f) of
 --  (Just v) -> v --let
                 --e2' = evalE g e2
                 --g' = (E.add g (v, e2'))
               --in evalE g' v
 --  _        -> error "runtime error: undefined function"
+-----------------------------------------------------------
+
+-- evaluates function applications
+evalE g (App e1 e2) =
+  let
+    v1 = evalE g' e1
+    v2 = evalE g e2
+    g' = (E.add g ("x", v2))
+-- looks up e1 to get the parameter name (i.e. "x")
+--    param = case (E.lookup g (show e1)) of
+--      (Just v1') -> v1'
+--      _          -> error runtime error: undefined variable"
+  in v1
 
 -- evaluates function values
 -- TODO: types are ignored for now
 evalE g (Letfun (Bind f (Arrow (TypeCon t1) (TypeCon t2)) [param] body)) =
   let
-    g' = (E.add g (f, Param param))
-  in evalE g body
---THIS ONE WORKS BUT WITHOUT HANDLING param: evalE g (Letfun (Bind f (Arrow (TypeCon t1) (TypeCon t2)) [param] body)) = evalE g body
+    g' = (E.add g (f, Param param)) -- adds named param to environment
+  in evalE g' body
 
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
