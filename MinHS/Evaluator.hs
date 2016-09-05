@@ -158,7 +158,7 @@ evalE g (App e1 e2) =
 
 -- evaluates function values
 -- TODO: types are ignored for now
-evalE g (Letfun (Bind f (Arrow (TypeCon t1) (TypeCon t2)) [param] body)) =
+evalE g (Letfun (Bind f (Arrow _ _) [param] body)) =
 --  let
 --    g' = (E.add g (f, Param param)) -- adds named param to environment
 --  in evalE g' body
