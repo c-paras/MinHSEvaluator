@@ -123,7 +123,7 @@ evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 --------
 --TODO: working on this version now - if no app
-evalE g (App (Prim Tail) x) = error (show (evalE g x))
+evalE g (App (Prim Tail) x) = evalE g (App (Prim Tail) (convert (evalE g x))) --error (show (evalE g x))
 
 --evalE g (App (Prim Tail) x) = error (show x) --evalE g x
 --------
@@ -166,6 +166,18 @@ evalE g (Letfun (Bind f (_) [param] body)) = Closure g f param body
 
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
+--(App (App (Con "Cons") (Num 1)) (Con "Nil"))
+convert :: Value -> Exp
+convert Nil = Con "Nil"
+
+convert (Cons n Nil) = (App (App (Con "Cons") (Num n)) (Con "Nil"))
+
+convert (Cons n' (Cons n Nil)) = (App (App (Con "Cons") (Num n')) (App (App (Con "Cons") (Num n)) (Con "Nil")))
+
+convert (Cons n'' (Cons n' (Cons n Nil))) = (App (App (Con "Cons") (Num n'')) (App (App (Con "Cons") (Num n')) (App (App (Con "Cons") (Num n)) (Con "Nil"))))
+--Cons 3 (Cons 2 (Cons 1 Nil))
+-- TODO: generalise for longer lists
+
 
 -- evaluates comparison operators
 evalCmp :: Integer -> Integer -> Op -> Bool
