@@ -20,7 +20,6 @@ data Value
   | Nil                            -- empty list constructor
   | Cons Integer Value             -- list constructor
   | Closure VEnv String String Exp -- function closure
---  | Closure2 VEnv String Exp       -- function closure
   deriving (Show)
 
 instance PP.Pretty Value where
@@ -93,6 +92,7 @@ evalE g (If e1 e2 e3) = case (evalE g e1) of
 evalE g (Var x) = case (E.lookup g x) of
   (Just v) -> v
   _        -> error "runtime error: undefined variable"
+--  _        -> error (show x)
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
@@ -109,6 +109,7 @@ evalE g (App (Prim Null) (e)) = case (evalE g e) of
 evalE g (App (Prim Head) (e)) = case (evalE g e) of
   (Cons x xs) -> I x
   Nil         -> error "runtime error: list is empty"
+--  _ -> evalE g (App (Prim Head) (convert (evalE g e)))
 
 -- evaluates tail
 evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
@@ -148,10 +149,12 @@ evalE g (Letfun (Bind f (_) [param] body)) = Closure g f param body
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
 
--- converts evaluated list constructor syntax to abstract syntax
+-- converts evaluated expressions into abstract syntax expressions
+-- used only to recover list constructors
 convert :: Value -> Exp
 convert Nil = Con "Nil"
 convert (Cons x xs) = (App (App (Con "Cons") (Num x)) (convert xs))
+--convert c = error (show c)
 
 -- evaluates comparison operators
 evalCmp :: Integer -> Integer -> Op -> Bool
