@@ -92,7 +92,7 @@ evalE g (If e1 e2 e3) = case (evalE g e1) of
 evalE g (Var x) = case (E.lookup g x) of
   (Just v) -> v
   _        -> error "runtime error: undefined variable"
---  _        -> error (show x)
+--  _        -> error (show x) -- TODO: check this
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
@@ -109,22 +109,13 @@ evalE g (App (Prim Null) (e)) = case (evalE g e) of
 evalE g (App (Prim Head) (e)) = case (evalE g e) of
   (Cons x xs) -> I x
   Nil         -> error "runtime error: list is empty"
---  _ -> evalE g (App (Prim Head) (convert (evalE g e)))
+--  _ -> evalE g (App (Prim Head) (convert (evalE g e))) -- TODO: check this
 
 -- evaluates tail
 evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
---------
 --TODO: check this
-evalE g (App (Prim Tail) x) = evalE g (App (Prim Tail) (convert (evalE g x))) --error (show (evalE g x))
---TODO: for debugging use : error (show (convert (evalE g x)))
---------
-
---evalE _ (Prim Tail) = Nil --error "tail" -- Nil
---evalE _ (Con "Cons") = Nil --error "cons" -- Nil
---evalE _ (App (Prim Head) _) = Nil
---evalE _ (App (Prim Tail) _) = Nil
---evalE _ (App (App (Con "Cons") _) _) = Nil
+evalE g (App (Prim Tail) x) = evalE g (App (Prim Tail) (convert (evalE g x)))
 
 -- evaluates let bindings
 evalE g (Let [Bind x (_) [] e1] e2) =
@@ -154,7 +145,7 @@ evalE _ e = error (show e)
 convert :: Value -> Exp
 convert Nil = Con "Nil"
 convert (Cons x xs) = (App (App (Con "Cons") (Num x)) (convert xs))
---convert c = error (show c)
+--convert c = error (show c) -- TODO: check this
 
 -- evaluates comparison operators
 evalCmp :: Integer -> Integer -> Op -> Bool
