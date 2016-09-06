@@ -111,6 +111,10 @@ evalE g (App (Prim Head) (e)) = case (evalE g e) of
 evalE g (App (Prim Tail) (App (App (Con "Cons") (Num x)) xs)) = evalE g xs
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 
+
+-- bug found: cons and tail are not general enough
+-- may not have Num n but may have nested calls
+
 --main :: Int = let sum :: [Int] -> Int = letfun sum :: [Int] -> Int x = if null x then 0 else head x + sum (tail x); in sum (Cons 3 (Cons 2 (Cons 1 Nil)));
 
 --main :: [Int] = let ones :: [Int] = letfun ones :: [Int] = Cons 1 ones; in Cons (head ones) (Cons (head (tail ones)) Nil);
