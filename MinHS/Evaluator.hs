@@ -20,6 +20,7 @@ data Value
   | Nil                            -- empty list constructor
   | Cons Integer Value             -- list constructor
   | Closure VEnv String String Exp -- function closure
+--  | Closure2 VEnv String Exp       -- function closure
   deriving (Show)
 
 instance PP.Pretty Value where
@@ -96,6 +97,12 @@ evalE g (Var x) = case (E.lookup g x) of
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
 evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
+evalE g (App (App (Con "Cons") x) xs) = case (evalE g x) of
+  (I n) -> (Cons (n) (evalE g xs))
+  _     -> error "aaaa"
+
+-- more general:
+--evalE g (App (App (Con "Cons") x) xs) = Cons (evalE g x) (evalE g xs)
 
 -- evaluates empty list inspector
 evalE g (App (Prim Null) (e)) = case (evalE g e) of
@@ -106,11 +113,17 @@ evalE g (App (Prim Null) (e)) = case (evalE g e) of
 evalE g (App (Prim Head) (e)) = case (evalE g e) of
   (Cons x xs) -> I x
   Nil         -> error "runtime error: list is empty"
+  _ -> error (show (evalE g e))
 
 -- evaluates tail
 evalE g (App (Prim Tail) (App (App (Con "Cons") (Num x)) xs)) = evalE g xs
+evalE g (App (Prim Tail) (App (App (Con "Cons") x) xs)) = case (evalE g x) of
+  (I n) -> (Cons (n) (evalE g xs))
+  _     -> error "bbbb"
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 
+-- more general:
+evalE g (App (Prim Tail) (x)) = evalE g x
 
 -- bug found: cons and tail are not general enough
 -- may not have Num n but may have nested calls
@@ -120,9 +133,10 @@ evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 --main :: [Int] = let ones :: [Int] = letfun ones :: [Int] = Cons 1 ones; in Cons (head ones) (Cons (head (tail ones)) Nil);
 
 --evalE _ (Prim Tail) = Nil --error "tail" -- Nil
---evalE _ (Con "Cons") = Nil -- error "cons" -- Nil
+--evalE _ (Con "Cons") = Nil --error "cons" -- Nil
 --evalE _ (App (Prim Head) _) = Nil
 --evalE _ (App (Prim Tail) _) = Nil
+--evalE _ (App (App (Con "Cons") _) _) = Nil
 
 -- evaluates let bindings
 evalE g (Let [Bind x (_) [] e1] e2) =
@@ -141,7 +155,8 @@ evalE g (App e1 e2) =
   in evalE g''' body
 
 -- evaluates function values
-evalE g (Letfun (Bind f (Arrow _ _) [param] body)) = Closure g f param body
+evalE g (Letfun (Bind f (_) [] body)) = evalE g body -- TODO: check this
+evalE g (Letfun (Bind f (_) [param] body)) = Closure g f param body
 
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
