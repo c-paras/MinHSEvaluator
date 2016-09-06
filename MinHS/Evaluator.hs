@@ -137,8 +137,8 @@ evalE g (App e1 e2) =
 -- type information is ignored
 evalE g (Letfun (Bind f (_) [] body)) =
   let
-    g' = (E.add g (f, f))--(evalE g f)))
-  in evalE g' body -- TODO: check this
+    g' = (E.add g (f, (evalE g body))) -- handles recursive references
+  in evalE g' body                     -- used for constructing infinite lists
 evalE g (Letfun (Bind f (_) [param] body)) = Closure g f param body
 
 -- terminates in error for all other expressions
