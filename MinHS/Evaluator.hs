@@ -96,13 +96,9 @@ evalE g (Var x) = case (E.lookup g x) of
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
---evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
 evalE g (App (App (Con "Cons") x) xs) = case (evalE g x) of
   (I n) -> (Cons (n) (evalE g xs))
   _     -> error "runtime error: type checking must have failed"
-
--- more general:
---evalE g (App (App (Con "Cons") x) xs) = Cons (evalE g x) (evalE g xs)
 
 -- evaluates empty list inspector
 evalE g (App (Prim Null) (e)) = case (evalE g e) of
@@ -113,30 +109,15 @@ evalE g (App (Prim Null) (e)) = case (evalE g e) of
 evalE g (App (Prim Head) (e)) = case (evalE g e) of
   (Cons x xs) -> I x
   Nil         -> error "runtime error: list is empty"
---  _ -> error (show (evalE g e))
 
 -- evaluates tail
 evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
---evalE g (App (Prim Tail) (App (App (Con "Cons") x) xs)) = case (evalE g x) of
---  (I n) -> (Cons (n) (evalE g xs))
---  _     -> error "bbbb"
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 --------
---TODO: working on this version now - if no app
+--TODO: check this
 evalE g (App (Prim Tail) x) = evalE g (App (Prim Tail) (convert (evalE g x))) --error (show (evalE g x))
-
---evalE g (App (Prim Tail) x) = error (show x) --evalE g x
+--TODO: for debugging use : error (show (convert (evalE g x)))
 --------
-
--- more general:
---evalE g (App (Prim Tail) (x)) = evalE g x
-
--- bug found: cons and tail are not general enough
--- may not have Num n but may have nested calls
-
---main :: Int = let sum :: [Int] -> Int = letfun sum :: [Int] -> Int x = if null x then 0 else head x + sum (tail x); in sum (Cons 3 (Cons 2 (Cons 1 Nil)));
-
---main :: [Int] = let ones :: [Int] = letfun ones :: [Int] = Cons 1 ones; in Cons (head ones) (Cons (head (tail ones)) Nil);
 
 --evalE _ (Prim Tail) = Nil --error "tail" -- Nil
 --evalE _ (Con "Cons") = Nil --error "cons" -- Nil
@@ -166,18 +147,11 @@ evalE g (Letfun (Bind f (_) [param] body)) = Closure g f param body
 
 -- terminates in error for all other expressions
 evalE _ e = error (show e)
---(App (App (Con "Cons") (Num 1)) (Con "Nil"))
+
+-- converts evaluated list constructor syntax to abstract syntax
 convert :: Value -> Exp
 convert Nil = Con "Nil"
-
-convert (Cons n Nil) = (App (App (Con "Cons") (Num n)) (Con "Nil"))
-
-convert (Cons n' (Cons n Nil)) = (App (App (Con "Cons") (Num n')) (App (App (Con "Cons") (Num n)) (Con "Nil")))
-
-convert (Cons n'' (Cons n' (Cons n Nil))) = (App (App (Con "Cons") (Num n'')) (App (App (Con "Cons") (Num n')) (App (App (Con "Cons") (Num n)) (Con "Nil"))))
---Cons 3 (Cons 2 (Cons 1 Nil))
--- TODO: generalise for longer lists
-
+convert (Cons x xs) = (App (App (Con "Cons") (Num x)) (convert xs))
 
 -- evaluates comparison operators
 evalCmp :: Integer -> Integer -> Op -> Bool
