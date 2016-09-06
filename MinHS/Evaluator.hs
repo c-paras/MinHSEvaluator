@@ -99,7 +99,7 @@ evalE g (Con "Nil") = Nil
 --evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
 evalE g (App (App (Con "Cons") x) xs) = case (evalE g x) of
   (I n) -> (Cons (n) (evalE g xs))
-  _     -> error "aaaa"
+  _     -> error "runtime error: type checking must have failed"
 
 -- more general:
 --evalE g (App (App (Con "Cons") x) xs) = Cons (evalE g x) (evalE g xs)
@@ -121,6 +121,12 @@ evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
 --  (I n) -> (Cons (n) (evalE g xs))
 --  _     -> error "bbbb"
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
+--------
+--TODO: working on this version now - if no app
+evalE g (App (Prim Tail) x) = error (show (evalE g x))
+
+--evalE g (App (Prim Tail) x) = error (show x) --evalE g x
+--------
 
 -- more general:
 --evalE g (App (Prim Tail) (x)) = evalE g x
