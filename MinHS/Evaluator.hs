@@ -96,7 +96,7 @@ evalE g (Var x) = case (E.lookup g x) of
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
-evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
+--evalE g (App (App (Con "Cons") (Num x)) xs) = Cons (x) (evalE g xs)
 evalE g (App (App (Con "Cons") x) xs) = case (evalE g x) of
   (I n) -> (Cons (n) (evalE g xs))
   _     -> error "aaaa"
@@ -113,17 +113,17 @@ evalE g (App (Prim Null) (e)) = case (evalE g e) of
 evalE g (App (Prim Head) (e)) = case (evalE g e) of
   (Cons x xs) -> I x
   Nil         -> error "runtime error: list is empty"
-  _ -> error (show (evalE g e))
+--  _ -> error (show (evalE g e))
 
 -- evaluates tail
-evalE g (App (Prim Tail) (App (App (Con "Cons") (Num x)) xs)) = evalE g xs
-evalE g (App (Prim Tail) (App (App (Con "Cons") x) xs)) = case (evalE g x) of
-  (I n) -> (Cons (n) (evalE g xs))
-  _     -> error "bbbb"
+evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
+--evalE g (App (Prim Tail) (App (App (Con "Cons") x) xs)) = case (evalE g x) of
+--  (I n) -> (Cons (n) (evalE g xs))
+--  _     -> error "bbbb"
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 
 -- more general:
-evalE g (App (Prim Tail) (x)) = evalE g x
+--evalE g (App (Prim Tail) (x)) = evalE g x
 
 -- bug found: cons and tail are not general enough
 -- may not have Num n but may have nested calls
