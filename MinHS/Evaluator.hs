@@ -104,24 +104,30 @@ evalE g (App (Prim Null) e) = case (evalE g e) of
   Nil -> B True
   _   -> B False
 
--- evaluates head
+-- evaluates head destructor
 evalE g (App (Prim Head) e) = case (evalE g e) of
   (Cons x xs) -> I x
   Nil         -> error "runtime error: list is empty"
---  _ -> evalE g (App (Prim Head) (convert (evalE g e))) -- TODO: check this
 
--- evaluates tail
+-- evaluates tail destructor
 evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 evalE g (App (Prim Tail) x) = evalE g (App (Prim Tail) (convert (evalE g x)))
 
--- evaluates let bindings
+-- evaluates simple let bindings
 -- type information is ignored
 evalE g (Let [Bind x (_) [] e1] e2) =
   let
     e1' = evalE g e1         -- evaluates the binding expression
     g'  = (E.add g (x, e1')) -- updates environment with new binding
   in evalE g' e2             -- evaluates the body of the binding
+
+-- evaluates more general let bindings
+-- type information is passed through
+evalE g (Let [(Bind x (t) [] e1), xs] e2) =
+  let
+    g' = evalBindings g [Bind x (t) [] e1, xs] -- adds bindings to environment
+  in evalE g' e2                               -- evaluates the body
 
 -- evaluates function applications
 evalE g (App e1 e2) =
@@ -157,3 +163,18 @@ evalCmp a b Gt = a  > b
 evalCmp a b Lt = a  < b
 evalCmp a b Ge = a >= b
 evalCmp a b Le = a <= b
+
+-- evaluates a list bindings under a given environment
+-- returns a new environment with all relevant bindings
+evalBindings :: VEnv -> [Bind] -> VEnv
+evalBindings g [Bind x (_) [] e] =
+  let
+    e' = evalE g e            -- evaluates the binding expression
+    g' = (E.add g (x, e'))    -- updates environment with new binding
+  in g'
+evalBindings g [Bind x (_) [] e, xs] =
+  let
+    e'  = evalE g e            -- evaluates the binding expression
+    g'  = (E.add g (x, e'))    -- updates environment with new binding
+    g'' = evalBindings g' [xs] -- evaluates the remaining bindings
+  in g''
