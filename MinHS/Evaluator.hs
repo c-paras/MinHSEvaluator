@@ -124,10 +124,10 @@ evalE g (Let [Bind x (_) [] e1] e2) =
 
 -- evaluates more general let bindings
 -- type information is passed through
-evalE g (Let [(Bind x (t) [] e1), xs] e2) =
+evalE g (Let (bindings) e2) =
   let
-    g' = evalBindings g [Bind x (t) [] e1, xs] -- adds bindings to environment
-  in evalE g' e2                               -- evaluates the body
+    g' = evalBindings g bindings -- adds bindings to the environment
+  in evalE g' e2                 -- evaluates the body of the binding
 
 -- evaluates function applications
 evalE g (App e1 e2) =
@@ -172,9 +172,21 @@ evalBindings g [Bind x (_) [] e] =
     e' = evalE g e            -- evaluates the binding expression
     g' = (E.add g (x, e'))    -- updates environment with new binding
   in g'
-evalBindings g [Bind x (_) [] e, xs] =
+evalBindings g [(Bind x (_) [] e), xs] =
   let
     e'  = evalE g e            -- evaluates the binding expression
     g'  = (E.add g (x, e'))    -- updates environment with new binding
     g'' = evalBindings g' [xs] -- evaluates the remaining bindings
   in g''
+{-evalBindings g [(Bind x (_) [] e), xs, xs'] =
+  let
+    e'  = evalE g e            -- evaluates the binding expression
+    g'  = (E.add g (x, e'))    -- updates environment with new binding
+    g'' = evalBindings g' [xs] -- evaluates the remaining bindings
+    g''' = evalBindings g'' [xs']
+  in g'''-}
+evalBindings g b = error $ show b
+
+
+
+
