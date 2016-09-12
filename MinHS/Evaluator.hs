@@ -19,7 +19,7 @@ data Value
   | B Bool                         -- boolean value
   | Nil                            -- empty list constructor
   | Cons Integer Value             -- list constructor
-  | Closure VEnv String String Exp -- function closure
+  | Closure VEnv String String Exp -- function closure (internal return value)
   deriving (Show)
 
 instance PP.Pretty Value where
@@ -91,8 +91,7 @@ evalE g (If e1 e2 e3) = case (evalE g e1) of
 -- evaluates variables
 evalE g (Var x) = case (E.lookup g x) of
   (Just v) -> v
-  _        -> error "runtime error: undefined variable"
---  _        -> error (show x) -- TODO: check this
+  _        -> error $ "runtime error: undefined variable " ++ (show x)
 
 -- evaluates list constructors
 evalE g (Con "Nil") = Nil
@@ -142,7 +141,7 @@ evalE g (Letfun (Bind f (_) [] body)) =
 evalE g (Letfun (Bind f (_) [param] body)) = Closure g f param body
 
 -- terminates in error for all other expressions
-evalE _ e = error (show e)
+evalE _ e = error $ "runtime error: " ++ (show e)
 
 -- converts evaluated expressions into abstract syntax expressions
 -- used only to recover list constructors
