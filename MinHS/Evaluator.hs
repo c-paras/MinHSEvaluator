@@ -169,24 +169,12 @@ evalCmp a b Le = a <= b
 evalBindings :: VEnv -> [Bind] -> VEnv
 evalBindings g [Bind x (_) [] e] =
   let
-    e' = evalE g e            -- evaluates the binding expression
-    g' = (E.add g (x, e'))    -- updates environment with new binding
+    e' = evalE g e           -- evaluates the binding expression
+    g' = (E.add g (x, e'))   -- updates environment with new binding
   in g'
-evalBindings g [(Bind x (_) [] e), xs] =
+evalBindings g ((Bind x (_) [] e):xs) =
   let
-    e'  = evalE g e            -- evaluates the binding expression
-    g'  = (E.add g (x, e'))    -- updates environment with new binding
-    g'' = evalBindings g' [xs] -- evaluates the remaining bindings
+    e'  = evalE g e          -- evaluates the binding expression
+    g'  = (E.add g (x, e'))  -- updates environment with new binding
+    g'' = evalBindings g' xs -- evaluates the remaining bindings
   in g''
-{-evalBindings g [(Bind x (_) [] e), xs, xs'] =
-  let
-    e'  = evalE g e            -- evaluates the binding expression
-    g'  = (E.add g (x, e'))    -- updates environment with new binding
-    g'' = evalBindings g' [xs] -- evaluates the remaining bindings
-    g''' = evalBindings g'' [xs']
-  in g'''-}
-evalBindings g b = error $ show b
-
-
-
-
