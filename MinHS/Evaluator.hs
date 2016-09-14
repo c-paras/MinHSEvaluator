@@ -114,6 +114,14 @@ evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 evalE g (App (Prim Tail) x) = evalE g (App (Prim Tail) (convert (evalE g x)))
 
+-- evaluates let bindings which declare functions
+-- bindings of this form must be non-recursive
+evalE g (Let [Bind x (_) [param] e1] e2) =
+  let
+    v1 = Closure g x param e1 -- defines the function closure of the function
+    g' = (E.add g (x, v1))    -- adds the function closure to the environment
+  in evalE g' e2              -- evaluates the body of the binding
+
 -- evaluates simple let bindings
 -- type information is ignored
 evalE g (Let [Bind x (_) [] e1] e2) =
