@@ -1,0 +1,8 @@
+main :: Int
+  = let f :: (Int -> Int) =
+      letfun f :: (Int -> Int) x = 4 * x;
+        a :: Int = 2;
+        b :: Int = 5;
+        c :: Int = 8;
+      in let g :: (Int -> Int) x = a - x + c;
+    in g (f b);

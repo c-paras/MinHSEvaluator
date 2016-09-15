@@ -1,0 +1,16 @@
+main :: Int
+  = let f :: (Int -> Int) =
+      letfun f :: (Int -> Int) q = q + 5;
+        g :: (Int -> Int) =
+      letfun g :: (Int -> Int) r = r - 3;
+        a :: Int = 1;
+        b :: Int = 2;
+        c :: Int = 3;
+        x :: Int = 4;
+        y :: Int = 5;
+        z :: Int = 6;
+        l :: Int = 7;
+        m :: Int = 8;
+        n :: Int = 9;
+      in let h :: (Int -> Int) w = w * a * b * c * x * y * z * l * m;
+    in h (g (f n));

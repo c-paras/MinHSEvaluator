@@ -1,0 +1,7 @@
+main :: Int
+  = let w :: Int = 1;
+        d :: Int = 4;
+        r :: Int = 7;
+    in let f :: (Int -> Int) x = x * d;
+        in let g :: (Int -> Int) x = x + r;
+            in f (g w);

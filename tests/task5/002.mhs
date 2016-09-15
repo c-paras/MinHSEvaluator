@@ -1,0 +1,6 @@
+main :: Int
+  = let a :: Int = 1;
+        b :: Int = 2;
+        y :: Int = 3;
+    in let f :: (Int -> Int) x = x + a + b;
+        in f y;
