@@ -114,14 +114,6 @@ evalE g (App (Prim Tail) (App (App (Con "Cons") _) xs)) = evalE g xs
 evalE g (App (Prim Tail) (Con "Nil")) = error "runtime error: list is empty"
 evalE g (App (Prim Tail) x) = evalE g (App (Prim Tail) (convert (evalE g x)))
 
--- evaluates let bindings which declare functions
--- bindings of this form must be non-recursive
-evalE g (Let [Bind x (_) [param] e1] e2) =
-  let
-    v1 = Closure g x param e1 -- defines the function closure of the function
-    g' = (E.add g (x, v1))    -- adds the function closure to the environment
-  in evalE g' e2              -- evaluates the body of the binding
-
 -- evaluates simple let bindings
 -- type information is ignored
 evalE g (Let [Bind x (_) [] e1] e2) =
@@ -175,14 +167,33 @@ evalCmp a b Le = a <= b
 -- evaluates a list bindings under a given environment
 -- returns a new environment with all relevant bindings
 evalBindings :: VEnv -> [Bind] -> VEnv
+
+-- base case for multiple bindings
 evalBindings g [Bind x (_) [] e] =
   let
-    e' = evalE g e           -- evaluates the binding expression
-    g' = (E.add g (x, e'))   -- updates environment with new binding
+    e' = evalE g e            -- evaluates the binding expression
+    g' = (E.add g (x, e'))    -- updates environment with new binding
   in g'
+
+-- recursive case for multiple bindings
 evalBindings g ((Bind x (_) [] e):xs) =
   let
-    e'  = evalE g e          -- evaluates the binding expression
-    g'  = (E.add g (x, e'))  -- updates environment with new binding
-    g'' = evalBindings g' xs -- evaluates the remaining bindings
+    e'  = evalE g e           -- evaluates the binding expression
+    g'  = (E.add g (x, e'))   -- updates environment with new binding
+    g'' = evalBindings g' xs  -- evaluates the remaining bindings
+  in g''
+
+-- base case for let bindings which declare functions
+evalBindings g [Bind x (_) [param] e] =
+  let
+    e' = Closure g x param e  -- defines the function closure of the function
+    g' = (E.add g (x, e'))    -- adds the function closure to the environment
+  in g'
+
+-- recursive case for let bindings which declare functions
+evalBindings g ((Bind x (_) [param] e):xs) =
+  let
+    e'  = Closure g x param e -- defines the function closure of the function
+    g'  = (E.add g (x, e'))   -- adds the function closure to the environment
+    g'' = evalBindings g' xs  -- evaluates the remaining bindings
   in g''
